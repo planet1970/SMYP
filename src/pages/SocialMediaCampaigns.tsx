@@ -16,6 +16,8 @@ interface Campaign {
   lastRunAt: string | null;
   createdAt: string;
   imageUrl?: string | null;
+  accountId?: number | null;
+  telegramId?: number | null;
 }
 
 interface Account {
@@ -86,6 +88,9 @@ const SocialMediaCampaigns: React.FC = () => {
   const [timeOfDay, setTimeOfDay] = useState<string>('09:00');
   const [isActive, setIsActive] = useState<boolean>(true);
   const [campaignImageUrl, setCampaignImageUrl] = useState<string>('');
+  const [campaignAccountId, setCampaignAccountId] = useState<string>('');
+  const [campaignTelegramId, setCampaignTelegramId] = useState<string>('');
+  const [telegramAccounts, setTelegramAccounts] = useState<any[]>([]);
 
   // Edit / Approval states
   const [selectedPostForEdit, setSelectedPostForEdit] = useState<Post | null>(null);
@@ -117,6 +122,8 @@ const SocialMediaCampaigns: React.FC = () => {
       setPosts(postData);
       const accountsData = await api.get<Account[]>('/social-media/accounts');
       setAccounts(accountsData.filter(a => a.isActive));
+      const tgData = await api.get<any[]>('/social-media/telegram');
+      setTelegramAccounts(tgData || []);
     } catch (error) {
       console.error('Kampanyalar yüklenirken hata:', error);
       toast.error('Zamanlanmış görevler yüklenemedi.');
@@ -140,6 +147,8 @@ const SocialMediaCampaigns: React.FC = () => {
     setTimeOfDay('09:00');
     setIsActive(true);
     setCampaignImageUrl('');
+    setCampaignAccountId('');
+    setCampaignTelegramId('');
     setIsModalOpen(true);
   };
 
@@ -153,6 +162,8 @@ const SocialMediaCampaigns: React.FC = () => {
     setTimeOfDay(campaign.timeOfDay);
     setIsActive(campaign.isActive);
     setCampaignImageUrl(campaign.imageUrl || '');
+    setCampaignAccountId(campaign.accountId ? String(campaign.accountId) : '');
+    setCampaignTelegramId(campaign.telegramId ? String(campaign.telegramId) : '');
     setIsModalOpen(true);
   };
 
@@ -208,6 +219,8 @@ const SocialMediaCampaigns: React.FC = () => {
         timeOfDay,
         isActive,
         imageUrl: campaignImageUrl || null,
+        accountId: campaignAccountId || null,
+        telegramId: campaignTelegramId || null,
       };
 
       if (editingCampaign) {
@@ -771,7 +784,10 @@ const SocialMediaCampaigns: React.FC = () => {
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Platform</label>
                   <select
                     value={platform}
-                    onChange={(e) => setPlatform(e.target.value)}
+                    onChange={(e) => {
+                      setPlatform(e.target.value);
+                      setCampaignAccountId('');
+                    }}
                     className="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-primary text-xs font-semibold bg-slate-50 text-slate-800 cursor-pointer"
                   >
                     <option value="INSTAGRAM">Instagram</option>
@@ -854,6 +870,43 @@ const SocialMediaCampaigns: React.FC = () => {
                   <div className="text-[10px] text-slate-400 font-medium leading-relaxed">
                     Buraya bir görsel yüklerseniz, kampanya her çalıştığında **bu sabit görsel** kullanılır. Yapay zeka ile görsel üretilmez ve **token tasarrufu** sağlanır.
                   </div>
+                </div>
+              </div>
+
+              {/* Paylaşım Yapılacak Hesap ve Telegram Kanalı Seçimi */}
+              <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-3">
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Paylaşım Yapılacak Hesap</label>
+                  <select
+                    value={campaignAccountId}
+                    onChange={(e) => setCampaignAccountId(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-primary text-xs font-semibold bg-slate-50 text-slate-800 cursor-pointer"
+                  >
+                    <option value="">Varsayılan (İlk Aktif Hesap)</option>
+                    {accounts
+                      .filter((a) => a.platform === platform)
+                      .map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.username}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Telegram Bildirim/Onay Hesabı</label>
+                  <select
+                    value={campaignTelegramId}
+                    onChange={(e) => setCampaignTelegramId(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-primary text-xs font-semibold bg-slate-50 text-slate-800 cursor-pointer"
+                  >
+                    <option value="">Tüm Aktif Kanallar (Broadcast)</option>
+                    {telegramAccounts.map((tg) => (
+                      <option key={tg.id} value={tg.id}>
+                        {tg.name || `Telegram Bot (ID: ${tg.id})`}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

@@ -29,52 +29,104 @@ const SocialMediaAccounts: React.FC = () => {
   const [pageId, setPageId] = useState<string>('');
 
   // Telegram Notification states
+  interface TelegramSetting {
+    id: number;
+    name: string;
+    botToken: string;
+    chatId: string;
+    isActive: boolean;
+  }
+
+  const [telegramSettings, setTelegramSettings] = useState<TelegramSetting[]>([]);
+  const [isTelegramModalOpen, setIsTelegramModalOpen] = useState<boolean>(false);
+  const [editingTelegram, setEditingTelegram] = useState<TelegramSetting | null>(null);
+
+  const [tgName, setTgName] = useState<string>('');
   const [tgBotToken, setTgBotToken] = useState<string>('');
   const [tgChatId, setTgChatId] = useState<string>('');
-  const [tgIsActive, setTgIsActive] = useState<boolean>(false);
+  const [tgIsActive, setTgIsActive] = useState<boolean>(true);
   const [tgSaving, setTgSaving] = useState<boolean>(false);
-  const [tgTesting, setTgTesting] = useState<boolean>(false);
+  const [tgTestingId, setTgTestingId] = useState<number | null>(null);
+  const [deleteTelegramTargetId, setDeleteTelegramTargetId] = useState<number | null>(null);
 
   const fetchTelegramSettings = async () => {
     try {
-      const res = await api.get<{ botToken: string; chatId: string; isActive: boolean }>('/social-media/telegram');
-      if (res) {
-        setTgBotToken(res.botToken || '');
-        setTgChatId(res.chatId || '');
-        setTgIsActive(res.isActive || false);
-      }
+      const res = await api.get<TelegramSetting[]>('/social-media/telegram');
+      setTelegramSettings(res || []);
     } catch (error) {
       console.error('Telegram ayarları yüklenirken hata:', error);
     }
   };
 
+  const handleOpenAddTelegramModal = () => {
+    setEditingTelegram(null);
+    setTgName('');
+    setTgBotToken('');
+    setTgChatId('');
+    setTgIsActive(true);
+    setIsTelegramModalOpen(true);
+  };
+
+  const handleOpenEditTelegramModal = (tg: TelegramSetting) => {
+    setEditingTelegram(tg);
+    setTgName(tg.name || '');
+    setTgBotToken(tg.botToken || '');
+    setTgChatId(tg.chatId || '');
+    setTgIsActive(tg.isActive);
+    setIsTelegramModalOpen(true);
+  };
+
   const handleSaveTelegram = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!tgName.trim() || !tgBotToken.trim() || !tgChatId.trim()) {
+      toast.error('Lütfen tüm alanları doldurun.');
+      return;
+    }
     setTgSaving(true);
     try {
-      await api.post('/social-media/telegram', {
-        botToken: tgBotToken,
-        chatId: tgChatId,
+      const payload = {
+        name: tgName.trim(),
+        botToken: tgBotToken.trim(),
+        chatId: tgChatId.trim(),
         isActive: tgIsActive,
-      });
-      toast.success('Telegram bildirim ayarları kaydedildi!');
+      };
+
+      if (editingTelegram) {
+        await api.put(`/social-media/telegram/${editingTelegram.id}`, payload);
+        toast.success('Telegram bildirim hesabı güncellendi!');
+      } else {
+        await api.post('/social-media/telegram', payload);
+        toast.success('Telegram bildirim hesabı eklendi!');
+      }
+      setIsTelegramModalOpen(false);
       fetchTelegramSettings();
     } catch (error) {
       console.error('Telegram ayarları kaydedilirken hata:', error);
+      toast.error('Telegram ayarları kaydedilemedi.');
     } finally {
       setTgSaving(false);
     }
   };
 
-  const handleTestTelegram = async () => {
-    if (!tgBotToken || !tgChatId) {
-      toast.error('Lütfen önce Bot Token ve Chat ID alanlarını doldurun.');
-      return;
+  const handleToggleTelegramActive = async (tg: TelegramSetting) => {
+    try {
+      await api.put(`/social-media/telegram/${tg.id}`, {
+        ...tg,
+        isActive: !tg.isActive,
+      });
+      toast.success(`Kanal ${!tg.isActive ? 'aktif' : 'pasif'} hale getirildi.`);
+      fetchTelegramSettings();
+    } catch (error) {
+      console.error('Telegram kanalı durumu değiştirilirken hata:', error);
+      toast.error('Durum değiştirilemedi.');
     }
-    setTgTesting(true);
+  };
+
+  const handleTestTelegram = async (tg: TelegramSetting) => {
+    setTgTestingId(tg.id);
     toast.loading('Test mesajı gönderiliyor...', { id: 'testTg' });
     try {
-      const res = await api.post<{ success: boolean; message: string }>('/social-media/telegram/test', {});
+      const res = await api.post<{ success: boolean; message: string }>(`/social-media/telegram/${tg.id}/test`, {});
       toast.dismiss('testTg');
       if (res.success) {
         toast.success(res.message);
@@ -84,9 +136,14 @@ const SocialMediaAccounts: React.FC = () => {
     } catch (error: any) {
       toast.dismiss('testTg');
       console.error('Telegram test hatası:', error);
+      toast.error('Test mesajı gönderilemedi.');
     } finally {
-      setTgTesting(false);
+      setTgTestingId(null);
     }
+  };
+
+  const handleDeleteTelegram = async (id: number) => {
+    setDeleteTelegramTargetId(id);
   };
 
   const fetchAccounts = async () => {
@@ -299,80 +356,198 @@ const SocialMediaAccounts: React.FC = () => {
         </div>
       )}
 
-      {/* Telegram Settings Card */}
-      <div className="bg-cardbg border border-slate-200/60 rounded-3xl p-6 shadow-sm max-w-3xl">
-        <div className="flex items-center gap-3 pb-4 border-b border-slate-200/60 mb-5">
-          <div className="w-10 h-10 bg-blue-500/10 text-blue-500 rounded-xl flex items-center justify-center">
-            <Bell size={20} />
+      {/* Telegram Kanalları Başlığı */}
+      <div className="flex justify-between items-center pt-6 border-t border-slate-200/60">
+        <div>
+          <h2 className="text-xl font-bold font-display text-slate-800">Telegram Bildirim ve Onay Kanalları</h2>
+          <p className="text-xs text-slate-500 font-semibold tracking-wider uppercase">Kampanyalar ve bildirimler için birden fazla Telegram kanalı tanımlayabilirsiniz</p>
+        </div>
+        <button
+          onClick={handleOpenAddTelegramModal}
+          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold py-2.5 px-5 rounded-xl text-xs hover:brightness-110 shadow-lg shadow-blue-500/10 transition-all duration-200 active:scale-95 cursor-pointer"
+        >
+          <Plus size={16} />
+          Yeni Telegram Kanalı Tanımla
+        </button>
+      </div>
+
+      {telegramSettings.length === 0 ? (
+        <div className="bg-cardbg border border-slate-200/60 rounded-3xl p-12 text-center max-w-lg mx-auto shadow-sm">
+          <div className="w-16 h-16 bg-blue-500/10 text-blue-500 rounded-xl flex items-center justify-center mx-auto mb-4 border border-blue-500/20">
+            <Bell size={28} />
           </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-800 leading-snug">Telegram Bildirim Ayarları</h3>
-            <p className="text-[10px] text-slate-400 font-medium">Sistem olayları, kampanyalar ve kritik hatalar için Telegram entegrasyonu</p>
+          <h3 className="text-lg font-bold font-display text-slate-800 mb-1">Telegram Kanalı Bulunamadı</h3>
+          <p className="text-slate-500 text-xs mb-6">
+            Sistem bildirimleri ve gönderi onay süreçleri için bir Telegram botu ve alıcı kanal tanımlayın.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {telegramSettings.map((tg) => (
+            <div key={tg.id} className="bg-cardbg border border-slate-200/60 rounded-3xl p-5 shadow-sm space-y-4 flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-center text-blue-500">
+                      <Send size={18} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-800 leading-snug">{tg.name || 'Telegram Bot'}</h4>
+                      <p className="text-[9px] text-slate-400 uppercase font-semibold">ID: {tg.id}</p>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={() => handleToggleTelegramActive(tg)}
+                    className="text-slate-400 hover:text-slate-600 transition-all active:scale-95"
+                    title={tg.isActive ? 'Devre Dışı Bırak' : 'Etkinleştir'}
+                  >
+                    {tg.isActive ? (
+                      <ToggleRight className="text-green-500" size={32} />
+                    ) : (
+                      <ToggleLeft className="text-slate-300" size={32} />
+                    )}
+                  </button>
+                </div>
+
+                <div className="space-y-1.5 pt-2 border-t border-slate-200/60">
+                  <div className="flex justify-between items-center text-[10px]">
+                    <span className="text-slate-400 font-bold uppercase">Alıcı Chat ID</span>
+                    <span className="text-slate-600 font-mono font-medium truncate max-w-[140px]" title={tg.chatId}>
+                      {tg.chatId}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center text-[10px]">
+                    <span className="text-slate-400 font-bold uppercase">Bot Token</span>
+                    <span className="text-slate-600 font-mono font-medium truncate max-w-[140px]" title={tg.botToken}>
+                      ••••••••{tg.botToken ? tg.botToken.slice(-6) : ''}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-3 border-t border-slate-200/60">
+                <button
+                  onClick={() => handleTestTelegram(tg)}
+                  disabled={tgTestingId === tg.id}
+                  className="flex-1 flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200/80 text-slate-700 font-bold py-2 px-3 border border-slate-200 rounded-xl text-xs transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {tgTestingId === tg.id ? (
+                    <RefreshCw className="animate-spin" size={12} />
+                  ) : (
+                    <Send size={12} />
+                  )}
+                  <span>Test Et</span>
+                </button>
+
+                <button
+                  onClick={() => handleOpenEditTelegramModal(tg)}
+                  className="p-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 rounded-xl transition-all active:scale-95"
+                  title="Düzenle"
+                >
+                  <Save size={14} />
+                </button>
+
+                <button
+                  onClick={() => handleDeleteTelegram(tg.id)}
+                  className="p-2 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 rounded-xl transition-all active:scale-95"
+                  title="Sil"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add/Edit Telegram Modal */}
+      {isTelegramModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-cardbg border border-slate-200/60 rounded-3xl max-w-md w-full shadow-2xl relative overflow-hidden flex flex-col p-6 space-y-5 animate-fadeIn text-slate-800">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-200/60">
+              <h3 className="font-bold font-display text-slate-800 text-base">
+                {editingTelegram ? 'Telegram Hesabını Düzenle' : 'Yeni Telegram Hesabı Tanımla'}
+              </h3>
+              <button
+                onClick={() => setIsTelegramModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full transition-all"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveTelegram} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Hesap/Grup Adı</label>
+                <input
+                  type="text"
+                  value={tgName}
+                  onChange={(e) => setTgName(e.target.value)}
+                  placeholder="örn: Edirne Rehber Onay Kanalı"
+                  required
+                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Telegram Bot Token (HTTP API Token)</label>
+                <input
+                  type="password"
+                  value={tgBotToken}
+                  onChange={(e) => setTgBotToken(e.target.value)}
+                  placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
+                  required
+                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary font-mono"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Alıcı Chat ID (Sizin veya Grup ID'niz)</label>
+                <input
+                  type="text"
+                  value={tgChatId}
+                  onChange={(e) => setTgChatId(e.target.value)}
+                  placeholder="-100123456789 veya 12345678"
+                  required
+                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary font-mono"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="modalTgActiveCheckbox"
+                  checked={tgIsActive}
+                  onChange={(e) => setTgIsActive(e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary accent-primary cursor-pointer"
+                />
+                <label htmlFor="modalTgActiveCheckbox" className="text-xs font-bold text-slate-600 select-none cursor-pointer">
+                  Telegram Bildirimlerini Etkinleştir
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-slate-200/60">
+                <button
+                  type="button"
+                  onClick={() => setIsTelegramModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/85 border border-slate-200 text-xs font-bold text-slate-600"
+                >
+                  Vazgeç
+                </button>
+                <button
+                  type="submit"
+                  disabled={tgSaving}
+                  className="bg-primary hover:bg-orange-600 text-white font-bold py-2 px-5 rounded-xl text-xs transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {tgSaving ? 'Kaydediliyor...' : 'Kaydet'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-
-        <form onSubmit={handleSaveTelegram} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Telegram Bot Token (HTTP API Token)</label>
-              <input
-                type="password"
-                value={tgBotToken}
-                onChange={(e) => setTgBotToken(e.target.value)}
-                placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary font-mono"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Alıcı Chat ID (Sizin veya Grup ID'niz)</label>
-              <input
-                type="text"
-                value={tgChatId}
-                onChange={(e) => setTgChatId(e.target.value)}
-                placeholder="-100123456789 veya 12345678"
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-primary font-mono"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-2">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="tgActiveCheckbox"
-                checked={tgIsActive}
-                onChange={(e) => setTgIsActive(e.target.checked)}
-                className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary accent-primary cursor-pointer"
-              />
-              <label htmlFor="tgActiveCheckbox" className="text-xs font-bold text-slate-600 select-none cursor-pointer">
-                Telegram Bildirimlerini Etkinleştir
-              </label>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={handleTestTelegram}
-                disabled={tgTesting}
-                className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-4 border border-slate-200 rounded-xl text-xs transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
-              >
-                <Send size={12} />
-                <span>Test Gönder</span>
-              </button>
-
-              <button
-                type="submit"
-                disabled={tgSaving}
-                className="flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-primary text-white font-bold py-2.5 px-5 rounded-xl text-xs hover:brightness-110 shadow-lg shadow-orange-500/10 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
-              >
-                <Save size={12} />
-                <span>Kaydet</span>
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
+      )}
 
       {/* Add Account Modal */}
       {isAddModalOpen && (
@@ -476,7 +651,8 @@ const SocialMediaAccounts: React.FC = () => {
           </div>
         </div>
       )}
-      {/* Custom Confirm Modal for Delete */}
+
+      {/* Custom Confirm Modal for Delete Account */}
       <ConfirmModal
         isOpen={deleteTargetId !== null}
         title="Hesabı Sil"
@@ -495,6 +671,28 @@ const SocialMediaAccounts: React.FC = () => {
           }
         }}
         onCancel={() => setDeleteTargetId(null)}
+      />
+
+      {/* Custom Confirm Modal for Delete Telegram */}
+      <ConfirmModal
+        isOpen={deleteTelegramTargetId !== null}
+        title="Telegram Hesabını Sil"
+        message="Bu Telegram bildirim kanalını silmek istediğinize emin misiniz?"
+        onConfirm={async () => {
+          if (deleteTelegramTargetId !== null) {
+            try {
+              await api.delete(`/social-media/telegram/${deleteTelegramTargetId}`);
+              toast.success('Telegram bildirim kanalı silindi.');
+              fetchTelegramSettings();
+            } catch (error) {
+              console.error('Telegram kanalı silinirken hata:', error);
+              toast.error('Telegram kanalı silinemedi.');
+            } finally {
+              setDeleteTelegramTargetId(null);
+            }
+          }
+        }}
+        onCancel={() => setDeleteTelegramTargetId(null)}
       />
     </div>
   );
