@@ -213,13 +213,19 @@ const SocialMediaGenerator: React.FC = () => {
     fetchAiSettings();
   }, []);
 
-  // Update selected account when platform changes
+  // Filter accounts by platform and automatically select if only 1 account
+  const platformAccounts = accounts.filter(a => a.platform === platform);
   useEffect(() => {
-    if (accounts.length > 0) {
-      const matched = accounts.find(a => a.platform === platform);
-      if (matched) {
-        setSelectedAccount(String(matched.id));
+    if (platformAccounts.length === 1) {
+      setSelectedAccount(String(platformAccounts[0].id));
+    } else if (platformAccounts.length > 1) {
+      // Keep selected if still valid, else select first
+      const exists = platformAccounts.some(a => String(a.id) === selectedAccount);
+      if (!exists) {
+        setSelectedAccount(String(platformAccounts[0].id));
       }
+    } else {
+      setSelectedAccount('');
     }
   }, [platform, accounts]);
 
@@ -316,8 +322,8 @@ const SocialMediaGenerator: React.FC = () => {
       return;
     }
 
-    if (accounts.length === 0) {
-      toast.error('Paylaşım yapabilmek için en az bir aktif hesap tanımlamalısınız.');
+    if (!selectedAccount) {
+      toast.error('Lütfen paylaşım yapılacak sosyal medya hesabını seçin.');
       return;
     }
 
@@ -341,6 +347,7 @@ const SocialMediaGenerator: React.FC = () => {
         postType,
         status: isScheduleMode ? 'SCHEDULED' : 'DRAFT',
         scheduledAt,
+        accountId: selectedAccount ? parseInt(selectedAccount, 10) : null,
       });
 
       if (isScheduleMode) {
@@ -423,6 +430,29 @@ const SocialMediaGenerator: React.FC = () => {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Account Selection */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Paylaşım Yapılacak Hesap</label>
+                <select
+                  value={selectedAccount}
+                  onChange={(e) => setSelectedAccount(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:border-primary text-sm font-semibold bg-slate-50 text-slate-800 cursor-pointer"
+                >
+                  {platformAccounts.length === 0 ? (
+                    <option value="">Bu platform için tanımlı aktif hesap bulunamadı!</option>
+                  ) : (
+                    <>
+                      <option value="">Hesap Seçin...</option>
+                      {platformAccounts.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.username}
+                        </option>
+                      ))}
+                    </>
+                  )}
+                </select>
               </div>
 
               {/* Post Type Selection */}

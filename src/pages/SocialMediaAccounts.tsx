@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { toast } from 'react-hot-toast';
 import { Trash2, Plus, RefreshCw, Key, ToggleLeft, ToggleRight, X, ShieldCheck, Instagram, Facebook, Video, Link2, Bell, Save, Send } from 'lucide-react';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 interface Account {
   id: number;
@@ -17,6 +18,7 @@ const SocialMediaAccounts: React.FC = () => {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [testingId, setTestingId] = useState<number | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
   // Form & modal state for adding new accounts
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
@@ -118,15 +120,7 @@ const SocialMediaAccounts: React.FC = () => {
   };
 
   const handleDeleteAccount = async (id: number) => {
-    if (window.confirm('Bu hesabı silmek istediğinize emin misiniz?')) {
-      try {
-        await api.delete(`/social-media/accounts/${id}`);
-        toast.success('Hesap silindi.');
-        fetchAccounts();
-      } catch (error) {
-        console.error('Hesap silinirken hata:', error);
-      }
-    }
+    setDeleteTargetId(id);
   };
 
   const handleTestConnection = async (account: Account) => {
@@ -482,6 +476,26 @@ const SocialMediaAccounts: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Custom Confirm Modal for Delete */}
+      <ConfirmModal
+        isOpen={deleteTargetId !== null}
+        title="Hesabı Sil"
+        message="Bu hesabı silmek istediğinize emin misiniz?"
+        onConfirm={async () => {
+          if (deleteTargetId !== null) {
+            try {
+              await api.delete(`/social-media/accounts/${deleteTargetId}`);
+              toast.success('Hesap silindi.');
+              fetchAccounts();
+            } catch (error) {
+              console.error('Hesap silinirken hata:', error);
+            } finally {
+              setDeleteTargetId(null);
+            }
+          }
+        }}
+        onCancel={() => setDeleteTargetId(null)}
+      />
     </div>
   );
 };

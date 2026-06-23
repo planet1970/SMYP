@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api, getImageUrl } from '../services/api';
 import { toast } from 'react-hot-toast';
 import { Trash2, Send, Calendar, CheckCircle2, XCircle, AlertCircle, RefreshCw, Copy, ExternalLink, MessageSquare, Instagram, Facebook, Video, Eye, X, Loader2, Edit, Upload } from 'lucide-react';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 interface Account {
   id: number;
@@ -35,6 +36,7 @@ const SocialMediaHistory: React.FC = () => {
   const [selectedPostForPreview, setSelectedPostForPreview] = useState<Post | null>(null);
   const [postsPage, setPostsPage] = useState<number>(1);
   const postsPerPage = 50;
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
   // Edit / Approval states
   const [selectedPostForEdit, setSelectedPostForEdit] = useState<Post | null>(null);
@@ -96,15 +98,7 @@ const SocialMediaHistory: React.FC = () => {
   };
 
   const handleDeletePost = async (id: number) => {
-    if (window.confirm('Bu gönderiyi geçmişten silmek istediğinize emin misiniz?')) {
-      try {
-        await api.delete(`/social-media/posts/${id}`);
-        toast.success('Gönderi silindi.');
-        fetchPosts();
-      } catch (error) {
-        console.error('Gönderi silinirken hata:', error);
-      }
-    }
+    setDeleteTargetId(id);
   };
 
   const handlePublishNow = async (id: number) => {
@@ -882,6 +876,26 @@ const SocialMediaHistory: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Custom Confirm Modal for Delete */}
+      <ConfirmModal
+        isOpen={deleteTargetId !== null}
+        title="Gönderiyi Sil"
+        message="Bu gönderiyi geçmişten silmek istediğinize emin misiniz?"
+        onConfirm={async () => {
+          if (deleteTargetId !== null) {
+            try {
+              await api.delete(`/social-media/posts/${deleteTargetId}`);
+              toast.success('Gönderi silindi.');
+              fetchPosts();
+            } catch (error) {
+              console.error('Gönderi silinirken hata:', error);
+            } finally {
+              setDeleteTargetId(null);
+            }
+          }
+        }}
+        onCancel={() => setDeleteTargetId(null)}
+      />
     </div>
   );
 };

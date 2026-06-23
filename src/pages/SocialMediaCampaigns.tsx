@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api, getImageUrl } from '../services/api';
 import { toast } from 'react-hot-toast';
 import { Plus, Trash2, Edit2, Calendar, Clock, RefreshCw, X, Play, Pause, Save, Instagram, Facebook, Video, Layers, Send, Edit, Upload, Loader2, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 interface Campaign {
   id: number;
@@ -48,6 +49,7 @@ const SocialMediaCampaigns: React.FC = () => {
   const [expandedCampaigns, setExpandedCampaigns] = useState<Record<number, boolean>>({});
   const [campaignsPage, setCampaignsPage] = useState<number>(1);
   const campaignsPerPage = 50;
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
   const toggleCampaignExpanded = (campaignId: number) => {
     setExpandedCampaigns(prev => ({
@@ -164,16 +166,7 @@ const SocialMediaCampaigns: React.FC = () => {
   };
 
   const handleDeleteCampaign = async (id: number) => {
-    if (window.confirm('Bu zamanlanmış görevi silmek istediğinize emin misiniz?')) {
-      try {
-        await api.delete(`/social-media/campaigns/${id}`);
-        toast.success('Zamanlanmış görev başarıyla silindi.');
-        fetchCampaigns();
-      } catch (error) {
-        console.error('Görev silinirken hata:', error);
-        toast.error('Görev silinemedi.');
-      }
-    }
+    setDeleteTargetId(id);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1038,6 +1031,27 @@ const SocialMediaCampaigns: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Custom Confirm Modal for Delete */}
+      <ConfirmModal
+        isOpen={deleteTargetId !== null}
+        title="Görevi Sil"
+        message="Bu zamanlanmış görevi silmek istediğinize emin misiniz?"
+        onConfirm={async () => {
+          if (deleteTargetId !== null) {
+            try {
+              await api.delete(`/social-media/campaigns/${deleteTargetId}`);
+              toast.success('Zamanlanmış görev başarıyla silindi.');
+              fetchCampaigns();
+            } catch (error) {
+              console.error('Görev silinirken hata:', error);
+              toast.error('Görev silinemedi.');
+            } finally {
+              setDeleteTargetId(null);
+            }
+          }
+        }}
+        onCancel={() => setDeleteTargetId(null)}
+      />
     </div>
   );
 };

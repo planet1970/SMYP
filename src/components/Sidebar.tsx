@@ -62,14 +62,16 @@ const Sidebar: React.FC = () => {
 
       {/* Footer Info Box */}
       <div className="p-4 border-t border-slate-200/60 shrink-0 bg-slate-50">
-        <div className="bg-white rounded-xl p-3 border border-slate-200/50 flex items-center gap-3 shadow-sm">
-          <ShieldAlert size={16} className="text-primary shrink-0" />
-          <div className="text-[10px] leading-relaxed text-slate-500">
-            <span className="font-bold text-slate-800 block">Local Test Platformu</span>
-            Bağlantı: api.edirnego.com
+        {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+          <div className="bg-white rounded-xl p-3 border border-slate-200/50 flex items-center gap-3 shadow-sm mb-3">
+            <ShieldAlert size={16} className="text-primary shrink-0" />
+            <div className="text-[10px] leading-relaxed text-slate-500">
+              <span className="font-bold text-slate-800 block">Local Test Platformu</span>
+              Bağlantı: api.edirnego.com
+            </div>
           </div>
-        </div>
-        <p className="text-[9px] text-center text-slate-400 font-medium mt-3">
+        )}
+        <p className="text-[9px] text-center text-slate-400 font-medium">
           &copy; 2026 SMYP Panel v1.0.0
         </p>
       </div>
