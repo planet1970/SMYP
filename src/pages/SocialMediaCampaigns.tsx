@@ -72,6 +72,7 @@ const SocialMediaCampaigns: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [publishingId, setPublishingId] = useState<number | null>(null);
   const [triggeringId, setTriggeringId] = useState<number | null>(null);
+  const [deletePostTargetId, setDeletePostTargetId] = useState<number | null>(null);
 
   // Modal and Form states
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -653,6 +654,14 @@ const SocialMediaCampaigns: React.FC = () => {
                                                     Paylaş
                                                   </button>
                                                 )}
+                                                <button
+                                                  onClick={() => setDeletePostTargetId(post.id)}
+                                                  className="flex items-center gap-0.5 text-[9px] bg-red-50 hover:bg-red-100 text-red-600 px-2 py-1 rounded-md font-bold transition-all cursor-pointer active:scale-95"
+                                                  title="Sil"
+                                                >
+                                                  <Trash2 size={10} />
+                                                  Sil
+                                                </button>
                                               </div>
                                             </td>
                                           </tr>
@@ -1084,6 +1093,26 @@ const SocialMediaCampaigns: React.FC = () => {
           }
         }}
         onCancel={() => setDeleteTargetId(null)}
+      />
+      <ConfirmModal
+        isOpen={deletePostTargetId !== null}
+        title="Gönderiyi Sil"
+        message="Bu gönderiyi silmek istediğinize emin misiniz?"
+        onConfirm={async () => {
+          if (deletePostTargetId !== null) {
+            try {
+              await api.delete(`/social-media/posts/${deletePostTargetId}`);
+              toast.success('Gönderi silindi.');
+              fetchCampaigns(false);
+            } catch (error) {
+              console.error('Gönderi silinirken hata:', error);
+              toast.error('Gönderi silinemedi.');
+            } finally {
+              setDeletePostTargetId(null);
+            }
+          }
+        }}
+        onCancel={() => setDeletePostTargetId(null)}
       />
     </div>
   );
