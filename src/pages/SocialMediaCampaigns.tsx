@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api, getImageUrl } from '../services/api';
 import { toast } from 'react-hot-toast';
-import { Plus, Trash2, Edit2, Calendar, Clock, RefreshCw, X, Play, Pause, Save, Instagram, Facebook, Video, Layers, Send, Edit, Upload, Loader2, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Trash2, Edit2, Calendar, Clock, RefreshCw, X, Play, Pause, Save, Instagram, Facebook, Video, Layers, Send, Edit, Upload, Loader2, CheckCircle2, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import { ConfirmModal } from '../components/ConfirmModal';
 
 interface Campaign {
@@ -71,6 +71,7 @@ const SocialMediaCampaigns: React.FC = () => {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [publishingId, setPublishingId] = useState<number | null>(null);
+  const [triggeringId, setTriggeringId] = useState<number | null>(null);
 
   // Modal and Form states
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -167,6 +168,26 @@ const SocialMediaCampaigns: React.FC = () => {
 
   const handleDeleteCampaign = async (id: number) => {
     setDeleteTargetId(id);
+  };
+
+  const handleTestTrigger = async (campaignId: number) => {
+    setTriggeringId(campaignId);
+    toast.loading('Kampanya testi çalıştırılıyor, test gönderisi üretiliyor...', { id: 'campaign-test' });
+    try {
+      await api.post(`/social-media/campaigns/${campaignId}/test-trigger`, {});
+      toast.success('Test gönderisi başarıyla üretildi! Onayınızı bekliyor.', { id: 'campaign-test' });
+      fetchCampaigns(false);
+      // Auto expand to show the new post
+      setExpandedCampaigns(prev => ({
+        ...prev,
+        [campaignId]: true
+      }));
+    } catch (error) {
+      console.error('Kampanya test tetikleme hatası:', error);
+      toast.error('Kampanya testi çalıştırılırken hata oluştu.', { id: 'campaign-test' });
+    } finally {
+      setTriggeringId(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -510,6 +531,18 @@ const SocialMediaCampaigns: React.FC = () => {
                           </td>
                           <td className="p-4 text-right">
                             <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleTestTrigger(campaign.id)}
+                                disabled={triggeringId === campaign.id}
+                                className="p-2 bg-primary/10 hover:bg-primary border border-primary/20 hover:border-transparent text-primary hover:text-white rounded-xl transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                                title="Test Gönderisi Üret"
+                              >
+                                {triggeringId === campaign.id ? (
+                                  <RefreshCw size={13} className="animate-spin" />
+                                ) : (
+                                  <Sparkles size={13} />
+                                )}
+                              </button>
                               <button
                                 onClick={() => openEditModal(campaign)}
                                 className="p-2 hover:bg-slate-100/80 border border-slate-200 text-slate-600 hover:text-slate-800 rounded-xl transition-all cursor-pointer active:scale-95"
