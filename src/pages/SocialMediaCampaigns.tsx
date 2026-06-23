@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api, getImageUrl } from '../services/api';
 import { toast } from 'react-hot-toast';
-import { Plus, Trash2, Edit2, Calendar, Clock, RefreshCw, X, Play, Pause, Save, Instagram, Facebook, Video, Layers, Send, Edit, Upload, Loader2, CheckCircle2, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
+import { Plus, Trash2, Edit2, Calendar, Clock, RefreshCw, X, Play, Pause, Save, Instagram, Facebook, Video, Layers, Send, Edit, Upload, Loader2, CheckCircle2, ChevronDown, ChevronUp, Sparkles, AlertCircle } from 'lucide-react';
 import { ConfirmModal } from '../components/ConfirmModal';
 
 interface Campaign {
@@ -1069,6 +1069,16 @@ const SocialMediaCampaigns: React.FC = () => {
                     </div>
                   )}
                 </div>
+
+                {selectedPostForEdit.status === 'PENDING_APPROVAL' && selectedPostForEdit.errorMessage && (
+                  <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-3.5 text-xs text-amber-800 space-y-1">
+                    <div className="font-bold flex items-center gap-1.5 text-amber-700">
+                      <AlertCircle size={14} className="text-amber-600 shrink-0" />
+                      Görsel Üretim Uyarısı
+                    </div>
+                    <p className="leading-relaxed text-[11px]">{selectedPostForEdit.errorMessage}</p>
+                  </div>
+                )}
 
                 {/* Upload Button */}
                 <div className="relative">

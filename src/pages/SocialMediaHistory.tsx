@@ -820,6 +820,16 @@ const SocialMediaHistory: React.FC = () => {
                   )}
                 </div>
 
+                {selectedPostForEdit.status === 'PENDING_APPROVAL' && selectedPostForEdit.errorMessage && (
+                  <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-3.5 text-xs text-amber-800 space-y-1">
+                    <div className="font-bold flex items-center gap-1.5 text-amber-700">
+                      <AlertCircle size={14} className="text-amber-600 shrink-0" />
+                      Görsel Üretim Uyarısı
+                    </div>
+                    <p className="leading-relaxed text-[11px]">{selectedPostForEdit.errorMessage}</p>
+                  </div>
+                )}
+                
                 {/* Upload Button */}
                 <div className="relative">
                   <input
