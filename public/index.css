@@ -1,0 +1,43 @@
+body {
+    background-color: #080a10;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Custom Scrollbar for dark theme */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0b0e17;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #1e263c;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #ff6c2f;
+}
+
+/* Glassmorphism custom classes */
+.glass-card {
+    background: rgba(17, 22, 37, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.custom-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+    background: #0b0e17;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+    background: #1e263c;
+    border-radius: 4px;
+}

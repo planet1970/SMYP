@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SMYP | Sosyal Medya Yönetim Paneli</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Outfit', 'sans-serif'],
+          },
+          colors: {
+            primary: '#ff6c2f', // Orange accent
+            darkbg: '#f8fafc', // Soft slate background
+            cardbg: '#ffffff', // Clean white card background
+            sidebarbg: '#ffffff', // Clean white sidebar background
+            borderdark: 'rgba(0, 0, 0, 0.07)', // Soft border color
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/index.css" />
+</head>
+
+<body class="bg-darkbg text-slate-800">
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>
