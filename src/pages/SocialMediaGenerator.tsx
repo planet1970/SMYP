@@ -55,7 +55,7 @@ const SocialMediaGenerator: React.FC = () => {
   const [scheduleDate, setScheduleDate] = useState<string>('');
   const [scheduleTime, setScheduleTime] = useState<string>('');
 
-  const fetchModelsForProvider = async (type: 'text' | 'image', providerId: string, rawData?: any) => {
+  const fetchModelsForProvider = async (type: 'text' | 'image', providerId: string, rawData?: any, targetModel?: string) => {
     const activeSettings = rawData || settingsRaw;
     if (!activeSettings) return;
 
@@ -108,6 +108,11 @@ const SocialMediaGenerator: React.FC = () => {
         setTextModelsList(models || []);
         if (models && models.length > 0) {
           setShowManualTextModel(false);
+          // Sync state with first model if current is not in list
+          const activeModel = targetModel !== undefined ? targetModel : textModel;
+          if (!models.includes(activeModel)) {
+            setTextModel(models[0]);
+          }
         } else {
           setShowManualTextModel(true);
         }
@@ -129,6 +134,11 @@ const SocialMediaGenerator: React.FC = () => {
         setImageModelsList(models || []);
         if (models && models.length > 0) {
           setShowManualImageModel(false);
+          // Sync state with first model if current is not in list
+          const activeModel = targetModel !== undefined ? targetModel : imageModel;
+          if (!models.includes(activeModel)) {
+            setImageModel(models[0]);
+          }
         } else {
           setShowManualImageModel(true);
         }
@@ -176,7 +186,7 @@ const SocialMediaGenerator: React.FC = () => {
       if (found) defModel = found.selectedModel;
     }
     setTextModel(defModel);
-    fetchModelsForProvider('text', prov);
+    fetchModelsForProvider('text', prov, undefined, defModel);
   };
 
   const handleImageProviderChange = (prov: string) => {
@@ -192,7 +202,7 @@ const SocialMediaGenerator: React.FC = () => {
       if (found) defModel = found.selectedModel;
     }
     setImageModel(defModel);
-    fetchModelsForProvider('image', prov);
+    fetchModelsForProvider('image', prov, undefined, defModel);
   };
 
   const fetchAccounts = async () => {

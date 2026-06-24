@@ -590,7 +590,20 @@ const AiSettings: React.FC = () => {
                 />
                 <select
                   value={settings.defaultImageProvider}
-                  onChange={(e) => handleInputChange('defaultImageProvider', e.target.value)}
+                  onChange={(e) => {
+                    const prov = e.target.value;
+                    let defModel = 'black-forest-labs/FLUX.1-schnell';
+                    if (prov === 'huggingface') defModel = 'black-forest-labs/FLUX.1-schnell';
+                    else if (prov === 'gemini') defModel = 'imagen-3.0-generate-002';
+                    else if (prov === 'dalle') defModel = 'dall-e-3';
+                    else if (prov === 'stability') defModel = 'sdxl';
+                    else if (prov === 'simulation') defModel = 'simulation';
+                    setSettings(prev => ({
+                      ...prev,
+                      defaultImageProvider: prov,
+                      defaultImageModel: defModel,
+                    }));
+                  }}
                   className="w-[140px] px-2 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"
                 >
                   <option value="huggingface">Hugging Face</option>
