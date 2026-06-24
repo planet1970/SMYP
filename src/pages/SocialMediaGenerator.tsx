@@ -183,6 +183,7 @@ const SocialMediaGenerator: React.FC = () => {
     setImageProvider(prov);
     let defModel = 'black-forest-labs/FLUX.1-schnell';
     if (prov === 'huggingface') defModel = 'black-forest-labs/FLUX.1-schnell';
+    else if (prov === 'gemini') defModel = 'imagen-3.0-generate-002';
     else if (prov === 'dalle') defModel = 'dall-e-3';
     else if (prov === 'stability') defModel = 'sdxl';
     else if (prov === 'simulation') defModel = 'simulation';
@@ -599,6 +600,7 @@ const SocialMediaGenerator: React.FC = () => {
                           className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-primary text-xs font-semibold bg-white text-slate-800 cursor-pointer"
                         >
                           {(!settingsRaw || settingsRaw.huggingFaceKey) && <option value="huggingface">Hugging Face (Flux)</option>}
+                          {(!settingsRaw || settingsRaw.geminiKey) && <option value="gemini">Imagen 3 (Gemini)</option>}
                           <option value="simulation">Simüle Görsel (Unsplash)</option>
                           {(!settingsRaw || settingsRaw.openAiKey) && <option value="dalle">OpenAI DALL-E 3</option>}
                           {(!settingsRaw || settingsRaw.stabilityKey) && <option value="stability">Stability AI (SDXL)</option>}

@@ -185,6 +185,7 @@ const PostCreator: React.FC = () => {
     setAiImageProvider(prov);
     let defModel = 'black-forest-labs/FLUX.1-schnell';
     if (prov === 'huggingface') defModel = 'black-forest-labs/FLUX.1-schnell';
+    else if (prov === 'gemini') defModel = 'imagen-3.0-generate-002';
     else if (prov === 'dalle') defModel = 'dall-e-3';
     else if (prov === 'stability') defModel = 'sdxl';
     else if (prov === 'simulation') defModel = 'simulation';
@@ -752,6 +753,7 @@ const PostCreator: React.FC = () => {
                     className="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-755 cursor-pointer"
                   >
                     {(!settingsRaw || settingsRaw.huggingFaceKey) && <option value="huggingface">FLUX (HuggingFace)</option>}
+                    {(!settingsRaw || settingsRaw.geminiKey) && <option value="gemini">Imagen 3 (Gemini)</option>}
                     {(!settingsRaw || settingsRaw.openAiKey) && <option value="dalle">DALL-E 3</option>}
                     {(!settingsRaw || settingsRaw.stabilityKey) && <option value="stability">Stability AI</option>}
                     {customModels.filter(m => m.apiKey).map(m => (

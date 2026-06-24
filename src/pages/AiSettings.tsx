@@ -594,6 +594,7 @@ const AiSettings: React.FC = () => {
                   className="w-[140px] px-2 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700"
                 >
                   <option value="huggingface">Hugging Face</option>
+                  <option value="gemini">Imagen 3 (Gemini)</option>
                   <option value="stability">Stability AI</option>
                   <option value="dalle">OpenAI DALL-E 3</option>
                   <option value="simulation">Simülasyon</option>
