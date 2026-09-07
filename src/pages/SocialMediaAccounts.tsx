@@ -251,7 +251,7 @@ const SocialMediaAccounts: React.FC = () => {
         </div>
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-primary text-white font-bold py-2.5 px-5 rounded-xl text-xs hover:brightness-110 shadow-lg shadow-orange-500/10 transition-all duration-200 active:scale-95"
+          className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 px-5 rounded-xl text-xs shadow-md shadow-orange-500/20 transition-all duration-200 active:scale-95 cursor-pointer"
         >
           <Plus size={16} />
           Yeni Hesap Tanımla

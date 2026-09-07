@@ -78,6 +78,44 @@ const PostCreator: React.FC = () => {
       if (type === 'text') setTextModelsList(['simulation']);
       else setImageModelsList(['simulation']);
       return;
+    } else if (providerId === 'huggingface') {
+      const hfModels = activeSettings.huggingFaceModels || [];
+      setImageModelsList(hfModels);
+      setShowManualImageModel(hfModels.length === 0);
+      
+      // Sync state with first model if current is not in list
+      const activeModel = targetModel !== undefined ? targetModel : aiImageModel;
+      if (hfModels.length > 0 && !hfModels.includes(activeModel)) {
+        setAiImageModel(hfModels[0]);
+      }
+      return;
+    } else if (providerId === 'groq') {
+      const groqModels = ['llama-3.3-70b-specdec', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
+      setImageModelsList(groqModels);
+      setShowManualImageModel(false);
+      const activeModel = targetModel !== undefined ? targetModel : aiImageModel;
+      if (!groqModels.includes(activeModel)) {
+        setAiImageModel(groqModels[0]);
+      }
+      return;
+    } else if (providerId === 'grok') {
+      const grokModels = ['grok-imagine-image-quality', 'grok-2-image', 'grok-beta'];
+      setImageModelsList(grokModels);
+      setShowManualImageModel(false);
+      const activeModel = targetModel !== undefined ? targetModel : aiImageModel;
+      if (!grokModels.includes(activeModel)) {
+        setAiImageModel(grokModels[0]);
+      }
+      return;
+    } else if (providerId === 'fal') {
+      const falModels = ['fal-ai/flux/schnell', 'fal-ai/flux/dev', 'fal-ai/flux/pro', 'fal-ai/flux/schnell/redux', 'fal-ai/flux/dev/redux'];
+      setImageModelsList(falModels);
+      setShowManualImageModel(false);
+      const activeModel = targetModel !== undefined ? targetModel : aiImageModel;
+      if (!falModels.includes(activeModel)) {
+        setAiImageModel(falModels[0]);
+      }
+      return;
     } else {
       const customModelsList = activeSettings.customModels || [];
       const found = customModelsList.find((m: any) => m.id === providerId);
@@ -195,9 +233,12 @@ const PostCreator: React.FC = () => {
     setAiImageProvider(prov);
     let defModel = 'black-forest-labs/FLUX.1-schnell';
     if (prov === 'huggingface') defModel = 'black-forest-labs/FLUX.1-schnell';
-    else if (prov === 'gemini') defModel = 'imagen-3.0-generate-002';
+    else if (prov === 'gemini') defModel = 'imagen-4.0-generate-001';
     else if (prov === 'dalle') defModel = 'dall-e-3';
     else if (prov === 'stability') defModel = 'sdxl';
+    else if (prov === 'groq') defModel = 'llama-3.3-70b-specdec';
+    else if (prov === 'grok') defModel = 'grok-imagine-image-quality';
+    else if (prov === 'fal') defModel = 'fal-ai/flux/schnell';
     else if (prov === 'simulation') defModel = 'simulation';
     else {
       const found = customModels.find(m => m.id === prov);
@@ -592,7 +633,7 @@ const PostCreator: React.FC = () => {
             <button
               onClick={handleSavePost}
               disabled={submitting || !caption.trim() || !selectedAccountId}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-primary text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg shadow-orange-500/10 hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-98 text-sm"
+              className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3.5 px-6 rounded-2xl shadow-md shadow-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-98 text-sm cursor-pointer"
             >
               {submitting ? (
                 <>
@@ -766,6 +807,9 @@ const PostCreator: React.FC = () => {
                     {(!settingsRaw || settingsRaw.geminiKey) && <option value="gemini">Imagen 3 (Gemini)</option>}
                     {(!settingsRaw || settingsRaw.openAiKey) && <option value="dalle">DALL-E 3</option>}
                     {(!settingsRaw || settingsRaw.stabilityKey) && <option value="stability">Stability AI</option>}
+                    {(!settingsRaw || settingsRaw.groqKey) && <option value="groq">Groq (FLUX)</option>}
+                    {(!settingsRaw || settingsRaw.grokKey) && <option value="grok">Grok Imagine (xAI)</option>}
+                    {(!settingsRaw || settingsRaw.falKey) && <option value="fal">fal.ai (FLUX)</option>}
                     {customModels.filter(m => m.apiKey).map(m => (
                       <option key={m.id} value={m.id}>[Özel] {m.name}</option>
                     ))}

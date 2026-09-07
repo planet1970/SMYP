@@ -36,8 +36,8 @@ const Dashboard: React.FC = () => {
           api.get<Account[]>('/social-media/accounts'),
           api.get<Post[]>('/social-media/posts'),
         ]);
-        setAccounts(acctsData);
-        setPosts(postsData);
+        setAccounts(Array.isArray(acctsData) ? acctsData : (acctsData as any)?.data || []);
+        setPosts(Array.isArray(postsData) ? postsData : (postsData as any)?.data || []);
       } catch (err) {
         console.error('Veri yüklenirken hata oluştu:', err);
       } finally {
@@ -48,14 +48,17 @@ const Dashboard: React.FC = () => {
   }, []);
 
   const stats = React.useMemo(() => {
-    const totalAccounts = accounts.length;
-    const activeAccounts = accounts.filter(a => a.isActive).length;
+    const safeAccounts = Array.isArray(accounts) ? accounts : [];
+    const safePosts = Array.isArray(posts) ? posts : [];
+
+    const totalAccounts = safeAccounts.length;
+    const activeAccounts = safeAccounts.filter(a => a.isActive).length;
     
-    const totalPosts = posts.length;
-    const published = posts.filter(p => p.status === 'PUBLISHED').length;
-    const scheduled = posts.filter(p => p.status === 'SCHEDULED').length;
-    const failed = posts.filter(p => p.status === 'FAILED').length;
-    const drafts = posts.filter(p => p.status === 'DRAFT').length;
+    const totalPosts = safePosts.length;
+    const published = safePosts.filter(p => p.status === 'PUBLISHED').length;
+    const scheduled = safePosts.filter(p => p.status === 'SCHEDULED').length;
+    const failed = safePosts.filter(p => p.status === 'FAILED').length;
+    const drafts = safePosts.filter(p => p.status === 'DRAFT').length;
 
     return { totalAccounts, activeAccounts, totalPosts, published, scheduled, failed, drafts };
   }, [accounts, posts]);
@@ -81,7 +84,7 @@ const Dashboard: React.FC = () => {
           <div className="pt-4 flex gap-4">
             <Link 
               to="/generator"
-              className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-primary text-white font-bold py-2.5 px-5 rounded-xl text-xs hover:brightness-110 shadow-md shadow-orange-500/10 transition-all duration-200 active:scale-95"
+              className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 px-5 rounded-xl text-xs shadow-md shadow-orange-500/20 transition-all duration-200 active:scale-95 cursor-pointer"
             >
               <Sparkles size={14} />
               AI Post Oluşturucu'ya Git

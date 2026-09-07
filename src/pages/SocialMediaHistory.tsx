@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api, getImageUrl } from '../services/api';
 import { toast } from 'react-hot-toast';
-import { Trash2, Send, Calendar, CheckCircle2, XCircle, AlertCircle, RefreshCw, Copy, ExternalLink, MessageSquare, Instagram, Facebook, Video, Eye, X, Loader2, Edit, Upload } from 'lucide-react';
+import { Trash2, Send, Calendar, CheckCircle2, XCircle, AlertCircle, RefreshCw, Copy, ExternalLink, MessageSquare, Instagram, Facebook, Video, Eye, X, Loader2, Edit, Edit3, Upload, Image as ImageIcon } from 'lucide-react';
 import { ConfirmModal } from '../components/ConfirmModal';
 
 interface Account {
@@ -26,6 +26,7 @@ interface Post {
   createdAt: string;
   updatedAt: string;
   accountId: number | null;
+  account?: Account;
 }
 
 const SocialMediaHistory: React.FC = () => {
@@ -48,6 +49,7 @@ const SocialMediaHistory: React.FC = () => {
   const [isRegeneratingImage, setIsRegeneratingImage] = useState<boolean>(false);
   const [isUploadingFile, setIsUploadingFile] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [mediaError, setMediaError] = useState<boolean>(false);
 
   useEffect(() => {
     if (selectedPostForEdit) {
@@ -56,6 +58,7 @@ const SocialMediaHistory: React.FC = () => {
       setEditPostType(selectedPostForEdit.postType);
       setEditAccountId(selectedPostForEdit.accountId ? String(selectedPostForEdit.accountId) : '');
       setImageFeedback('');
+      setMediaError(false);
     }
   }, [selectedPostForEdit]);
 
@@ -129,28 +132,37 @@ const SocialMediaHistory: React.FC = () => {
     setIsRegeneratingImage(true);
     toast.loading('AI ile görsel yeniden üretiliyor...', { id: 'regenerate-image' });
     try {
-      const result = await api.post<{ imageUrl: string; imagePrompt: string }>('/social-media/regenerate-image', {
+      const result = await api.post<{ imageUrl: string; imagePrompt: string; error?: string }>('/social-media/regenerate-image', {
         imagePrompt: selectedPostForEdit.prompt || 'Edirne',
         feedback: imageFeedback,
-        imageProvider: 'huggingface',
       });
       
-      const updatedPost = {
+      const updatedPost: Post = {
         ...selectedPostForEdit,
         imageUrl: result.imageUrl,
-        prompt: result.imagePrompt
+        prompt: result.imagePrompt,
+        errorMessage: result.error || null,
       };
       
       await api.put(`/social-media/posts/${selectedPostForEdit.id}`, {
         ...selectedPostForEdit,
         imageUrl: result.imageUrl,
-        prompt: result.imagePrompt
+        prompt: result.imagePrompt,
+        errorMessage: result.error || null,
       });
 
       setSelectedPostForEdit(updatedPost);
-      toast.success('Görsel başarıyla yeniden üretildi ve kaydedildi!');
-    } catch (error) {
-      console.error(error);
+      setMediaError(false);
+      if (result.error) {
+        toast.error(`Görsel üretilemedi: ${result.error}`, { duration: 6000 });
+      } else {
+        toast.success('Görsel başarıyla yeniden üretildi ve kaydedildi!');
+      }
+    } catch (error: any) {
+      console.error('Görsel yeniden üretme hatası:', error);
+      const msg = error.response?.data?.message || error.message || 'Görsel üretilirken bir hata oluştu.';
+      toast.error(msg, { duration: 6000 });
+      setSelectedPostForEdit(prev => prev ? { ...prev, errorMessage: msg } : null);
     } finally {
       setIsRegeneratingImage(false);
       toast.dismiss('regenerate-image');
@@ -698,24 +710,24 @@ const SocialMediaHistory: React.FC = () => {
 
       {/* Edit / Review & Approve Modal */}
       {selectedPostForEdit && (
-        <div className="fixed inset-0 bg-black/55 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-cardbg border border-slate-200/60 rounded-3xl max-w-4xl w-full max-h-[92vh] overflow-hidden shadow-2xl relative flex flex-col text-slate-800">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-100 rounded-3xl max-w-4xl w-full max-h-[92vh] overflow-hidden shadow-2xl relative flex flex-col text-slate-800">
             {/* Modal Header */}
-            <div className="flex justify-between items-center px-6 py-4 border-b border-slate-200/60 shrink-0">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-slate-100 shrink-0">
               <h3 className="font-bold text-slate-800 flex items-center gap-2 text-base">
-                <Edit className="text-primary" size={18} />
+                <Edit3 className="text-orange-500" size={18} />
                 Gönderi İnceleme ve Onaylama
               </h3>
               <button
                 onClick={() => setSelectedPostForEdit(null)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full transition-all"
+                className="p-1.5 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-full transition-all"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50">
+            <div className="p-6 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 bg-white">
               {/* Left Side: Fields Form */}
               <div className="space-y-4">
                 <div>
@@ -723,7 +735,7 @@ const SocialMediaHistory: React.FC = () => {
                   <select
                     value={editPlatform}
                     onChange={(e) => setEditPlatform(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-semibold"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-semibold text-slate-800 cursor-pointer"
                   >
                     <option value="INSTAGRAM">Instagram</option>
                     <option value="FACEBOOK">Facebook</option>
@@ -736,7 +748,7 @@ const SocialMediaHistory: React.FC = () => {
                   <select
                     value={editPostType}
                     onChange={(e) => setEditPostType(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-semibold"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-semibold text-slate-800 cursor-pointer"
                   >
                     <option value="POST">Gönderi (Feed)</option>
                     <option value="STORY">Hikaye (Story)</option>
@@ -749,7 +761,7 @@ const SocialMediaHistory: React.FC = () => {
                   <select
                     value={editAccountId}
                     onChange={(e) => setEditAccountId(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-semibold"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-semibold text-slate-800 cursor-pointer"
                   >
                     <option value="">Platformun Varsayılan Hesabı</option>
                     {accounts
@@ -768,29 +780,29 @@ const SocialMediaHistory: React.FC = () => {
                     rows={6}
                     value={editCaption}
                     onChange={(e) => setEditCaption(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium leading-relaxed"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium leading-relaxed text-slate-800 h-[170px] resize-none"
                     placeholder="Gönderi metnini yazın..."
                   />
                 </div>
 
                 {/* AI Image Regeneration Box */}
-                <div className="border border-slate-200/60 bg-white rounded-2xl p-4 space-y-3">
+                <div className="border border-slate-200/80 bg-white rounded-2xl p-4 space-y-2.5">
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">Yapay Zeka ile Görseli Yenile</span>
                   </div>
-                  <p className="text-[10px] text-slate-400 font-medium">Görselin tarzını değiştirmek veya düzeltmek için geribildirim yazın.</p>
+                  <p className="text-[11px] text-slate-400 font-normal">Görselin tarzını değiştirmek veya düzeltmek için geribildirim yazın.</p>
                   <textarea
                     rows={2}
                     value={imageFeedback}
                     onChange={(e) => setImageFeedback(e.target.value)}
                     placeholder="Örn: 'Renkleri daha sıcak yap, mavi tonlarını azalt...'"
-                    className="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all text-slate-800"
                   />
                   <button
                     type="button"
                     onClick={handleRegenerateImage}
                     disabled={isRegeneratingImage || !imageFeedback.trim()}
-                    className="w-full flex items-center justify-center gap-1.5 bg-primary/10 hover:bg-primary border border-primary/25 hover:border-transparent text-primary hover:text-white py-2 rounded-xl text-xs font-bold transition-all active:scale-95 disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-1.5 border border-orange-200 bg-orange-50/50 hover:bg-orange-100/70 text-orange-600 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-98 disabled:opacity-50 cursor-pointer"
                   >
                     {isRegeneratingImage ? <RefreshCw size={13} className="animate-spin" /> : <RefreshCw size={13} />}
                     AI ile Görseli Yeniden Üret
@@ -803,33 +815,31 @@ const SocialMediaHistory: React.FC = () => {
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Gönderi Medyası</label>
                 
                 {/* Media Container */}
-                <div className="flex-1 min-h-[220px] max-h-[300px] border border-slate-200 bg-white rounded-2xl overflow-hidden relative flex items-center justify-center shadow-inner">
+                <div className="flex-1 min-h-[300px] border border-slate-200/80 bg-white rounded-2xl overflow-hidden relative flex items-center justify-center p-2">
                   {selectedPostForEdit.videoUrl ? (
-                    <video src={getImageUrl(selectedPostForEdit.videoUrl)} controls className="w-full h-full object-cover" />
-                  ) : selectedPostForEdit.imageUrl ? (
-                    <img src={getImageUrl(selectedPostForEdit.imageUrl)} alt="Preview" className="w-full h-full object-contain" />
+                    <video src={getImageUrl(selectedPostForEdit.videoUrl)} controls className="w-full h-full object-contain rounded-xl" />
+                  ) : selectedPostForEdit.imageUrl && !mediaError ? (
+                    <img 
+                      src={getImageUrl(selectedPostForEdit.imageUrl)} 
+                      alt="Preview" 
+                      className="w-full h-full max-h-[360px] object-contain rounded-xl"
+                      onError={() => setMediaError(true)}
+                    />
                   ) : (
-                    <p className="text-xs font-semibold text-slate-400 italic">Medya atanmamış</p>
+                    <div className="flex flex-col items-center justify-center p-6 text-center text-slate-400">
+                      <ImageIcon size={36} className="text-slate-300 mb-2" />
+                      <span className="text-xs font-medium">{mediaError ? 'Görsel yüklenemedi' : 'Medya atanmamış'}</span>
+                    </div>
                   )}
 
                   {/* Upload overlay spinner */}
                   {isUploadingFile && (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-xs">
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-xs rounded-2xl">
                       <Loader2 className="animate-spin text-white w-8 h-8" />
                     </div>
                   )}
                 </div>
 
-                {selectedPostForEdit.status === 'PENDING_APPROVAL' && selectedPostForEdit.errorMessage && (
-                  <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-3.5 text-xs text-amber-800 space-y-1">
-                    <div className="font-bold flex items-center gap-1.5 text-amber-700">
-                      <AlertCircle size={14} className="text-amber-600 shrink-0" />
-                      Görsel Üretim Uyarısı
-                    </div>
-                    <p className="leading-relaxed text-[11px]">{selectedPostForEdit.errorMessage}</p>
-                  </div>
-                )}
-                
                 {/* Upload Button */}
                 <div className="relative">
                   <input
@@ -842,22 +852,32 @@ const SocialMediaHistory: React.FC = () => {
                   />
                   <label
                     htmlFor="edit-post-file"
-                    className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 border border-slate-200/80 text-slate-700 py-3 rounded-2xl text-xs font-bold cursor-pointer transition-all active:scale-98"
+                    className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200/80 border border-slate-200/80 text-slate-700 py-3 rounded-2xl text-xs font-bold cursor-pointer transition-all active:scale-98"
                   >
                     <Upload size={14} />
                     Bilgisayardan Yeni Görsel/Video Yükle
                   </label>
                 </div>
+
+                {selectedPostForEdit.errorMessage && (
+                  <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-3.5 text-xs text-amber-900 space-y-1">
+                    <div className="font-bold flex items-center gap-1.5 text-amber-700">
+                      <AlertCircle size={15} className="text-amber-600 shrink-0" />
+                      Görsel Üretim Uyarısı
+                    </div>
+                    <p className="leading-relaxed text-[11px] text-amber-800 whitespace-pre-wrap">{selectedPostForEdit.errorMessage}</p>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 border-t border-slate-200/60 flex flex-wrap justify-between items-center gap-3 shrink-0 bg-slate-50">
+            <div className="px-6 py-4 border-t border-slate-100 flex flex-wrap justify-between items-center gap-3 shrink-0 bg-slate-50/50">
               <button
                 type="button"
                 onClick={() => setSelectedPostForEdit(null)}
                 disabled={isSaving}
-                className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-bold transition-all active:scale-95 disabled:opacity-50"
+                className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-bold transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
               >
                 İptal
               </button>
@@ -867,7 +887,7 @@ const SocialMediaHistory: React.FC = () => {
                   type="button"
                   onClick={() => handleSavePostEdit(false)}
                   disabled={isSaving}
-                  className="px-5 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold transition-all active:scale-95 disabled:opacity-50"
+                  className="px-5 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   Taslak Olarak Kaydet
                 </button>
@@ -876,7 +896,7 @@ const SocialMediaHistory: React.FC = () => {
                   type="button"
                   onClick={() => handleSavePostEdit(true)}
                   disabled={isSaving}
-                  className="px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-bold shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold shadow-md shadow-orange-500/20 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
                 >
                   <CheckCircle2 size={14} />
                   Onayla ve Hemen Paylaş

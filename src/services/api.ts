@@ -5,10 +5,20 @@ const API_BASE_URL = (import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'h
 
 export const getImageUrl = (url?: string) => {
   if (!url) return '';
-  if (url.startsWith('http') || url.startsWith('data:')) return url;
+  if (url.startsWith('data:')) return url;
   
-  const cleanUrl = url.startsWith('/') ? url : `/${url}`;
-  return `${API_BASE_URL}${cleanUrl}`;
+  let targetUrl = url;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+    targetUrl = `${API_BASE_URL}${cleanUrl}`;
+  }
+
+  // Mixed content fix for production (HTTPS host requesting HTTP assets)
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:' && targetUrl.startsWith('http://')) {
+    targetUrl = targetUrl.replace('http://', 'https://');
+  }
+
+  return targetUrl;
 };
 
 interface CustomRequestOptions extends Omit<RequestInit, 'body'> {
