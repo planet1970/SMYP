@@ -80,40 +80,42 @@ const PostCreator: React.FC = () => {
       return;
     } else if (providerId === 'huggingface') {
       const hfModels = activeSettings.huggingFaceModels || [];
-      setImageModelsList(hfModels);
-      setShowManualImageModel(hfModels.length === 0);
-      
-      // Sync state with first model if current is not in list
       const activeModel = targetModel !== undefined ? targetModel : aiImageModel;
-      if (hfModels.length > 0 && !hfModels.includes(activeModel)) {
-        setAiImageModel(hfModels[0]);
+      const combined = hfModels.includes(activeModel) || !activeModel ? hfModels : [activeModel, ...hfModels];
+      setImageModelsList(combined);
+      setShowManualImageModel(combined.length === 0);
+      if (activeModel) {
+        setAiImageModel(activeModel);
       }
       return;
     } else if (providerId === 'groq') {
       const groqModels = ['llama-3.3-70b-specdec', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
-      setImageModelsList(groqModels);
-      setShowManualImageModel(false);
       const activeModel = targetModel !== undefined ? targetModel : aiImageModel;
-      if (!groqModels.includes(activeModel)) {
-        setAiImageModel(groqModels[0]);
+      const combined = groqModels.includes(activeModel) || !activeModel ? groqModels : [activeModel, ...groqModels];
+      setImageModelsList(combined);
+      setShowManualImageModel(false);
+      if (activeModel) {
+        setAiImageModel(activeModel);
       }
       return;
     } else if (providerId === 'grok') {
       const grokModels = ['grok-imagine-image-quality', 'grok-2-image', 'grok-beta'];
-      setImageModelsList(grokModels);
-      setShowManualImageModel(false);
       const activeModel = targetModel !== undefined ? targetModel : aiImageModel;
-      if (!grokModels.includes(activeModel)) {
-        setAiImageModel(grokModels[0]);
+      const combined = grokModels.includes(activeModel) || !activeModel ? grokModels : [activeModel, ...grokModels];
+      setImageModelsList(combined);
+      setShowManualImageModel(false);
+      if (activeModel) {
+        setAiImageModel(activeModel);
       }
       return;
     } else if (providerId === 'fal') {
       const falModels = ['fal-ai/flux/schnell', 'fal-ai/flux/dev', 'fal-ai/flux/pro', 'fal-ai/flux/schnell/redux', 'fal-ai/flux/dev/redux'];
-      setImageModelsList(falModels);
-      setShowManualImageModel(false);
       const activeModel = targetModel !== undefined ? targetModel : aiImageModel;
-      if (!falModels.includes(activeModel)) {
-        setAiImageModel(falModels[0]);
+      const combined = falModels.includes(activeModel) || !activeModel ? falModels : [activeModel, ...falModels];
+      setImageModelsList(combined);
+      setShowManualImageModel(false);
+      if (activeModel) {
+        setAiImageModel(activeModel);
       }
       return;
     } else {
@@ -129,9 +131,11 @@ const PostCreator: React.FC = () => {
     if (!apiUrl || !apiKey) {
       if (type === 'text') {
         setTextModelsList([]);
+        if (targetModel) setAiTextModel(targetModel);
         setShowManualTextModel(true);
       } else {
         setImageModelsList([]);
+        if (targetModel) setAiImageModel(targetModel);
         setShowManualImageModel(true);
       }
       return;
@@ -145,20 +149,25 @@ const PostCreator: React.FC = () => {
           apiKey,
           provider: providerType,
         });
-        setTextModelsList(models || []);
-        if (models && models.length > 0) {
+        const activeModel = targetModel !== undefined ? targetModel : aiTextModel;
+        const finalModelsList = models && Array.isArray(models) ? [...models] : [];
+        if (activeModel && !finalModelsList.includes(activeModel)) {
+          finalModelsList.unshift(activeModel);
+        }
+        setTextModelsList(finalModelsList);
+        if (finalModelsList.length > 0) {
           setShowManualTextModel(false);
-          // Sync state with first model if current is not in list
-          const activeModel = targetModel !== undefined ? targetModel : aiTextModel;
-          if (!models.includes(activeModel)) {
-            setAiTextModel(models[0]);
+          if (activeModel) {
+            setAiTextModel(activeModel);
           }
         } else {
+          if (activeModel) setAiTextModel(activeModel);
           setShowManualTextModel(true);
         }
       } catch (err) {
         console.error('Metin modelleri alınamadı:', err);
         setTextModelsList([]);
+        if (targetModel) setAiTextModel(targetModel);
         setShowManualTextModel(true);
       } finally {
         setLoadingTextModels(false);
@@ -171,20 +180,25 @@ const PostCreator: React.FC = () => {
           apiKey,
           provider: providerType,
         });
-        setImageModelsList(models || []);
-        if (models && models.length > 0) {
+        const activeModel = targetModel !== undefined ? targetModel : aiImageModel;
+        const finalModelsList = models && Array.isArray(models) ? [...models] : [];
+        if (activeModel && !finalModelsList.includes(activeModel)) {
+          finalModelsList.unshift(activeModel);
+        }
+        setImageModelsList(finalModelsList);
+        if (finalModelsList.length > 0) {
           setShowManualImageModel(false);
-          // Sync state with first model if current is not in list
-          const activeModel = targetModel !== undefined ? targetModel : aiImageModel;
-          if (!models.includes(activeModel)) {
-            setAiImageModel(models[0]);
+          if (activeModel) {
+            setAiImageModel(activeModel);
           }
         } else {
+          if (activeModel) setAiImageModel(activeModel);
           setShowManualImageModel(true);
         }
       } catch (err) {
         console.error('Görsel modelleri alınamadı:', err);
         setImageModelsList([]);
+        if (targetModel) setAiImageModel(targetModel);
         setShowManualImageModel(true);
       } finally {
         setLoadingImageModels(false);
@@ -207,8 +221,8 @@ const PostCreator: React.FC = () => {
       setAiImageModel(imgMod);
       setCustomModels(Array.isArray(data.customModels) ? data.customModels : []);
 
-      fetchModelsForProvider('text', textProv, data);
-      fetchModelsForProvider('image', imgProv, data);
+      fetchModelsForProvider('text', textProv, data, textMod);
+      fetchModelsForProvider('image', imgProv, data, imgMod);
     } catch (error) {
       console.error('AI ayarları alınamadı:', error);
     }

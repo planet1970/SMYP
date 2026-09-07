@@ -78,40 +78,42 @@ const SocialMediaGenerator: React.FC = () => {
       return;
     } else if (providerId === 'huggingface') {
       const hfModels = activeSettings.huggingFaceModels || [];
-      setImageModelsList(hfModels);
-      setShowManualImageModel(hfModels.length === 0);
-      
-      // Sync state with first model if current is not in list
       const activeModel = targetModel !== undefined ? targetModel : imageModel;
-      if (hfModels.length > 0 && !hfModels.includes(activeModel)) {
-        setImageModel(hfModels[0]);
+      const combined = hfModels.includes(activeModel) || !activeModel ? hfModels : [activeModel, ...hfModels];
+      setImageModelsList(combined);
+      setShowManualImageModel(combined.length === 0);
+      if (activeModel) {
+        setImageModel(activeModel);
       }
       return;
     } else if (providerId === 'groq') {
       const groqModels = ['llama-3.3-70b-specdec', 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
-      setImageModelsList(groqModels);
-      setShowManualImageModel(false);
       const activeModel = targetModel !== undefined ? targetModel : imageModel;
-      if (!groqModels.includes(activeModel)) {
-        setImageModel(groqModels[0]);
+      const combined = groqModels.includes(activeModel) || !activeModel ? groqModels : [activeModel, ...groqModels];
+      setImageModelsList(combined);
+      setShowManualImageModel(false);
+      if (activeModel) {
+        setImageModel(activeModel);
       }
       return;
     } else if (providerId === 'grok') {
       const grokModels = ['grok-imagine-image-quality', 'grok-2-image', 'grok-beta'];
-      setImageModelsList(grokModels);
-      setShowManualImageModel(false);
       const activeModel = targetModel !== undefined ? targetModel : imageModel;
-      if (!grokModels.includes(activeModel)) {
-        setImageModel(grokModels[0]);
+      const combined = grokModels.includes(activeModel) || !activeModel ? grokModels : [activeModel, ...grokModels];
+      setImageModelsList(combined);
+      setShowManualImageModel(false);
+      if (activeModel) {
+        setImageModel(activeModel);
       }
       return;
     } else if (providerId === 'fal') {
       const falModels = ['fal-ai/flux/schnell', 'fal-ai/flux/dev', 'fal-ai/flux/pro', 'fal-ai/flux/schnell/redux', 'fal-ai/flux/dev/redux'];
-      setImageModelsList(falModels);
-      setShowManualImageModel(false);
       const activeModel = targetModel !== undefined ? targetModel : imageModel;
-      if (!falModels.includes(activeModel)) {
-        setImageModel(falModels[0]);
+      const combined = falModels.includes(activeModel) || !activeModel ? falModels : [activeModel, ...falModels];
+      setImageModelsList(combined);
+      setShowManualImageModel(false);
+      if (activeModel) {
+        setImageModel(activeModel);
       }
       return;
     } else {
@@ -127,9 +129,11 @@ const SocialMediaGenerator: React.FC = () => {
     if (!apiUrl || !apiKey) {
       if (type === 'text') {
         setTextModelsList([]);
+        if (targetModel) setTextModel(targetModel);
         setShowManualTextModel(true);
       } else {
         setImageModelsList([]);
+        if (targetModel) setImageModel(targetModel);
         setShowManualImageModel(true);
       }
       return;
@@ -143,20 +147,25 @@ const SocialMediaGenerator: React.FC = () => {
           apiKey,
           provider: providerType,
         });
-        setTextModelsList(models || []);
-        if (models && models.length > 0) {
+        const activeModel = targetModel !== undefined ? targetModel : textModel;
+        const finalModelsList = models && Array.isArray(models) ? [...models] : [];
+        if (activeModel && !finalModelsList.includes(activeModel)) {
+          finalModelsList.unshift(activeModel);
+        }
+        setTextModelsList(finalModelsList);
+        if (finalModelsList.length > 0) {
           setShowManualTextModel(false);
-          // Sync state with first model if current is not in list
-          const activeModel = targetModel !== undefined ? targetModel : textModel;
-          if (!models.includes(activeModel)) {
-            setTextModel(models[0]);
+          if (activeModel) {
+            setTextModel(activeModel);
           }
         } else {
+          if (activeModel) setTextModel(activeModel);
           setShowManualTextModel(true);
         }
       } catch (err) {
         console.error('Metin modelleri alınamadı:', err);
         setTextModelsList([]);
+        if (targetModel) setTextModel(targetModel);
         setShowManualTextModel(true);
       } finally {
         setLoadingTextModels(false);
@@ -169,20 +178,25 @@ const SocialMediaGenerator: React.FC = () => {
           apiKey,
           provider: providerType,
         });
-        setImageModelsList(models || []);
-        if (models && models.length > 0) {
+        const activeModel = targetModel !== undefined ? targetModel : imageModel;
+        const finalModelsList = models && Array.isArray(models) ? [...models] : [];
+        if (activeModel && !finalModelsList.includes(activeModel)) {
+          finalModelsList.unshift(activeModel);
+        }
+        setImageModelsList(finalModelsList);
+        if (finalModelsList.length > 0) {
           setShowManualImageModel(false);
-          // Sync state with first model if current is not in list
-          const activeModel = targetModel !== undefined ? targetModel : imageModel;
-          if (!models.includes(activeModel)) {
-            setImageModel(models[0]);
+          if (activeModel) {
+            setImageModel(activeModel);
           }
         } else {
+          if (activeModel) setImageModel(activeModel);
           setShowManualImageModel(true);
         }
       } catch (err) {
         console.error('Görsel modelleri alınamadı:', err);
         setImageModelsList([]);
+        if (targetModel) setImageModel(targetModel);
         setShowManualImageModel(true);
       } finally {
         setLoadingImageModels(false);
@@ -198,15 +212,17 @@ const SocialMediaGenerator: React.FC = () => {
       const textMod = data.defaultTextModel || 'gemini-2.5-flash';
       const imgProv = data.defaultImageProvider || 'huggingface';
       const imgMod = data.defaultImageModel || 'flux';
+      const vidProv = data.defaultVideoProvider || 'simulation';
 
       setTextProvider(textProv);
       setTextModel(textMod);
       setImageProvider(imgProv);
       setImageModel(imgMod);
+      setVideoProvider(vidProv);
       setCustomModels(Array.isArray(data.customModels) ? data.customModels : []);
 
-      fetchModelsForProvider('text', textProv, data);
-      fetchModelsForProvider('image', imgProv, data);
+      fetchModelsForProvider('text', textProv, data, textMod);
+      fetchModelsForProvider('image', imgProv, data, imgMod);
     } catch (error) {
       console.error('AI ayarları alınamadı:', error);
     }
