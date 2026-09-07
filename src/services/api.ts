@@ -70,7 +70,7 @@ async function request<T>(path: string, options: CustomRequestOptions = {}): Pro
     const text = await res.text();
     let data: any;
     try {
-      data = text ? JSON.parse(text) : null;
+      data = text && text.trim() ? JSON.parse(text) : null;
     } catch {
       data = text;
     }

@@ -27,7 +27,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const storedToken = localStorage.getItem(TOKEN_KEY);
         const storedUser = localStorage.getItem(USER_KEY);
         if (storedToken) setToken(storedToken);
-        if (storedUser) setUser(JSON.parse(storedUser));
+        if (storedUser && storedUser.trim() && storedUser !== 'undefined' && storedUser !== 'null') {
+          try {
+            setUser(JSON.parse(storedUser));
+          } catch (jsonErr) {
+            console.warn("Geçersiz kullanıcı oturum verisi temizlendi:", jsonErr);
+            localStorage.removeItem(USER_KEY);
+          }
+        }
       } catch (e) {
         console.error("Auth initialization failed:", e);
       } finally {
