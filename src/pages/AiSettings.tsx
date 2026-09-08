@@ -490,7 +490,7 @@ const AiSettings: React.FC = () => {
   ];
 
   const imageProviders = [
-    { id: 'pollinations', name: '✨ Pollinations AI (%100 Ücretsiz / No Key)' },
+    { id: 'pollinations', name: '✨ Pollinations AI (FLUX / Bağlandı)' },
     { id: 'huggingface', name: 'Hugging Face' },
     { id: 'gemini', name: 'Google Imagen (Gemini)' },
     { id: 'dalle', name: 'OpenAI DALL-E 3' },
