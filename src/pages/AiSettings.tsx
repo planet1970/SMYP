@@ -79,6 +79,18 @@ const KNOWN_MODELS: Record<string, { text?: string[]; image?: string[]; video?: 
   stability: {
     image: ['stable-diffusion-xl-1024-v1-0', 'sd3-medium', 'stable-image-ultra'],
   },
+  pollinations: {
+    image: [
+      'flux',
+      'turbo',
+      'flux-realism',
+      'flux-anime',
+      'flux-3d',
+      'flux-cablyai',
+      'flux-pro',
+      'any-dark'
+    ],
+  },
   huggingface: {
     image: [
       'stabilityai/stable-diffusion-2-1',
@@ -478,6 +490,7 @@ const AiSettings: React.FC = () => {
   ];
 
   const imageProviders = [
+    { id: 'pollinations', name: '✨ Pollinations AI (%100 Ücretsiz / No Key)' },
     { id: 'huggingface', name: 'Hugging Face' },
     { id: 'gemini', name: 'Google Imagen (Gemini)' },
     { id: 'dalle', name: 'OpenAI DALL-E 3' },

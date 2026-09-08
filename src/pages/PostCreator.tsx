@@ -78,6 +78,13 @@ const PostCreator: React.FC = () => {
       if (type === 'text') setTextModelsList(['simulation']);
       else setImageModelsList(['simulation']);
       return;
+    } else if (providerId === 'pollinations') {
+      const polModels = ['flux', 'turbo', 'flux-realism', 'flux-anime', 'flux-3d', 'flux-cablyai', 'flux-pro'];
+      const activeModel = targetModel !== undefined ? targetModel : (aiImageModel || 'flux');
+      setImageModelsList(polModels);
+      setShowManualImageModel(false);
+      setAiImageModel(polModels.includes(activeModel) ? activeModel : 'flux');
+      return;
     } else if (providerId === 'huggingface') {
       const hfModels = activeSettings.huggingFaceModels || [];
       const activeModel = targetModel !== undefined ? targetModel : aiImageModel;
@@ -817,6 +824,7 @@ const PostCreator: React.FC = () => {
                     onChange={(e) => handleImageProviderChange(e.target.value)}
                     className="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-755 cursor-pointer"
                   >
+                    <option value="pollinations">✨ Pollinations AI (%100 Ücretsiz)</option>
                     {(!settingsRaw || settingsRaw.huggingFaceKey) && <option value="huggingface">FLUX (HuggingFace)</option>}
                     {(!settingsRaw || settingsRaw.geminiKey) && <option value="gemini">Imagen 3 (Gemini)</option>}
                     {(!settingsRaw || settingsRaw.openAiKey) && <option value="dalle">DALL-E 3</option>}
