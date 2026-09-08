@@ -39,7 +39,7 @@ const PostCreator: React.FC = () => {
 
   const [aiImagePrompt, setAiImagePrompt] = useState<string>('');
   const [aiImageProvider, setAiImageProvider] = useState<string>('huggingface');
-  const [aiImageModel, setAiImageModel] = useState<string>('flux');
+  const [aiImageModel, setAiImageModel] = useState<string>('stabilityai/stable-diffusion-2-1');
   const [generatingImage, setGeneratingImage] = useState<boolean>(false);
   const [customModels, setCustomModels] = useState<any[]>([]);
 
@@ -213,7 +213,7 @@ const PostCreator: React.FC = () => {
       const textProv = data.defaultTextProvider || 'gemini';
       const textMod = data.defaultTextModel || 'gemini-2.5-flash';
       const imgProv = data.defaultImageProvider || 'huggingface';
-      const imgMod = data.defaultImageModel || 'flux';
+      const imgMod = data.defaultImageModel || 'stabilityai/stable-diffusion-2-1';
 
       setAiTextProvider(textProv);
       setAiTextModel(textMod);
@@ -245,8 +245,8 @@ const PostCreator: React.FC = () => {
 
   const handleImageProviderChange = (prov: string) => {
     setAiImageProvider(prov);
-    let defModel = 'black-forest-labs/FLUX.1-schnell';
-    if (prov === 'huggingface') defModel = 'black-forest-labs/FLUX.1-schnell';
+    let defModel = 'stabilityai/stable-diffusion-2-1';
+    if (prov === 'huggingface') defModel = 'stabilityai/stable-diffusion-2-1';
     else if (prov === 'gemini') defModel = 'imagen-4.0-generate-001';
     else if (prov === 'dalle') defModel = 'dall-e-3';
     else if (prov === 'stability') defModel = 'sdxl';
@@ -862,7 +862,7 @@ const PostCreator: React.FC = () => {
                         value={aiImageModel}
                         onChange={(e) => setAiImageModel(e.target.value)}
                         className="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none"
-                        placeholder="Model ID (Örn: black-forest-labs/FLUX.1-schnell)"
+                        placeholder="Model ID (Örn: stabilityai/stable-diffusion-2-1)"
                       />
                       {imageModelsList.length > 0 && (
                         <button

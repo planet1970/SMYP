@@ -23,7 +23,7 @@ const SocialMediaGenerator: React.FC = () => {
   const [textProvider, setTextProvider] = useState<string>('gemini');
   const [textModel, setTextModel] = useState<string>('gemini-2.5-flash');
   const [imageProvider, setImageProvider] = useState<string>('huggingface');
-  const [imageModel, setImageModel] = useState<string>('flux');
+  const [imageModel, setImageModel] = useState<string>('stabilityai/stable-diffusion-2-1');
   const [videoProvider, setVideoProvider] = useState<string>('simulation');
   const [includeImage, setIncludeImage] = useState<boolean>(true);
   const [includeVideo, setIncludeVideo] = useState<boolean>(false);
@@ -211,7 +211,7 @@ const SocialMediaGenerator: React.FC = () => {
       const textProv = data.defaultTextProvider || 'gemini';
       const textMod = data.defaultTextModel || 'gemini-2.5-flash';
       const imgProv = data.defaultImageProvider || 'huggingface';
-      const imgMod = data.defaultImageModel || 'flux';
+      const imgMod = data.defaultImageModel || 'stabilityai/stable-diffusion-2-1';
       const vidProv = data.defaultVideoProvider || 'simulation';
 
       setTextProvider(textProv);
@@ -245,8 +245,8 @@ const SocialMediaGenerator: React.FC = () => {
 
   const handleImageProviderChange = (prov: string) => {
     setImageProvider(prov);
-    let defModel = 'black-forest-labs/FLUX.1-schnell';
-    if (prov === 'huggingface') defModel = 'black-forest-labs/FLUX.1-schnell';
+    let defModel = 'stabilityai/stable-diffusion-2-1';
+    if (prov === 'huggingface') defModel = 'stabilityai/stable-diffusion-2-1';
     else if (prov === 'gemini') defModel = 'imagen-4.0-generate-001';
     else if (prov === 'dalle') defModel = 'dall-e-3';
     else if (prov === 'stability') defModel = 'sdxl';

@@ -81,11 +81,14 @@ const KNOWN_MODELS: Record<string, { text?: string[]; image?: string[]; video?: 
   },
   huggingface: {
     image: [
+      'stabilityai/stable-diffusion-2-1',
+      'runwayml/stable-diffusion-v1-5',
+      'prompthero/openjourney',
+      'CompVis/stable-diffusion-v1-4',
+      'segmind/SSD-1B',
+      'stabilityai/sdxl-turbo',
       'black-forest-labs/FLUX.1-schnell',
       'black-forest-labs/FLUX.1-dev',
-      'stabilityai/stable-diffusion-xl-base-1.0',
-      'stabilityai/stable-diffusion-3-medium-diffusers',
-      'playgroundai/playground-v2.5-1024px-aesthetic',
     ],
   },
   fal: {
@@ -106,11 +109,13 @@ const KNOWN_MODELS: Record<string, { text?: string[]; image?: string[]; video?: 
 };
 
 const DEFAULT_HF_MODELS = [
+  'stabilityai/stable-diffusion-2-1',
+  'runwayml/stable-diffusion-v1-5',
+  'prompthero/openjourney',
+  'CompVis/stable-diffusion-v1-4',
+  'segmind/SSD-1B',
+  'stabilityai/sdxl-turbo',
   'black-forest-labs/FLUX.1-schnell',
-  'black-forest-labs/FLUX.1-dev',
-  'stabilityai/stable-diffusion-xl-base-1.0',
-  'stabilityai/stable-diffusion-3-medium-diffusers',
-  'playgroundai/playground-v2.5-1024px-aesthetic',
 ];
 
 // Popular defaults for OpenRouter / generic custom endpoints
@@ -150,7 +155,7 @@ const AiSettings: React.FC = () => {
     fallbackTextProvider: 'openai',
     fallbackTextModel: 'gpt-4o-mini',
     defaultImageProvider: 'huggingface',
-    defaultImageModel: 'black-forest-labs/FLUX.1-schnell',
+    defaultImageModel: 'stabilityai/stable-diffusion-2-1',
     fallbackImageProvider: 'gemini',
     fallbackImageModel: 'imagen-4.0-generate-001',
     defaultVideoProvider: 'fal',
@@ -221,7 +226,7 @@ const AiSettings: React.FC = () => {
         fallbackTextProvider: data.fallbackTextProvider || 'openai',
         fallbackTextModel: data.fallbackTextModel || 'gpt-4o-mini',
         defaultImageProvider: data.defaultImageProvider || 'huggingface',
-        defaultImageModel: data.defaultImageModel || 'black-forest-labs/FLUX.1-schnell',
+        defaultImageModel: data.defaultImageModel || 'stabilityai/stable-diffusion-2-1',
         fallbackImageProvider: data.fallbackImageProvider || 'gemini',
         fallbackImageModel: data.fallbackImageModel || 'imagen-4.0-generate-001',
         defaultVideoProvider: data.defaultVideoProvider || 'fal',
@@ -1628,7 +1633,7 @@ const AiSettings: React.FC = () => {
                   type="text"
                   value={newHfModel}
                   onChange={(e) => setNewHfModel(e.target.value)}
-                  placeholder="Örn: stabilityai/stable-diffusion-3-medium-diffusers veya black-forest-labs/FLUX.1-schnell"
+                  placeholder="Örn: stabilityai/stable-diffusion-2-1 veya runwayml/stable-diffusion-v1-5"
                   className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800"
                 />
                 <button
