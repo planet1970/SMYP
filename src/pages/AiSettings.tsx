@@ -538,6 +538,19 @@ const AiSettings: React.FC = () => {
     }
 
     const isCustomValue = currentValue === '';
+    const isTextModelInImageMode = category === 'image' && currentValue && (
+      currentValue.toLowerCase().includes('deepseek') ||
+      currentValue.toLowerCase().includes('claude') ||
+      currentValue.toLowerCase().includes('llama') ||
+      currentValue.toLowerCase().includes('nemotron') ||
+      currentValue.toLowerCase().includes('gpt-3') ||
+      currentValue.toLowerCase().includes('gpt-4') ||
+      currentValue.toLowerCase().includes('qwen') ||
+      currentValue.toLowerCase().includes('mistral') ||
+      currentValue.toLowerCase().includes('gemini-1') ||
+      currentValue.toLowerCase().includes('gemini-2') ||
+      currentValue.toLowerCase().includes('phi')
+    );
 
     return (
       <div className="space-y-1.5">
@@ -568,7 +581,7 @@ const AiSettings: React.FC = () => {
                   onValueChange(e.target.value);
                 }
               }}
-              className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-primary"
+              className={`w-full px-3 py-2 bg-white border ${isTextModelInImageMode ? 'border-amber-400 bg-amber-50/20' : 'border-slate-200'} rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-primary`}
             >
               {knownList.map((model) => (
                 <option key={model} value={model}>{model}</option>
@@ -594,6 +607,12 @@ const AiSettings: React.FC = () => {
             placeholder="Model kimliğini buraya yazın..."
             className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-primary"
           />
+        )}
+
+        {isTextModelInImageMode && (
+          <div className="p-2 bg-amber-50 border border-amber-300 text-amber-800 rounded-lg text-[10px] leading-tight font-medium">
+            ⚠️ <strong>Uyarı:</strong> Seçilen model bir <strong>Metin (LLM)</strong> modelidir ve görsel çizemez. Görsel üretimi için <strong>Hugging Face (stabilityai/stable-diffusion-2-1)</strong>, Fal.ai veya DALL-E seçmelisiniz.
+          </div>
         )}
       </div>
     );
@@ -793,6 +812,11 @@ const AiSettings: React.FC = () => {
                   </div>
                 </div>
                 <span className="text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-lg">GORSEL</span>
+              </div>
+
+              <div className="bg-amber-50/60 border border-amber-200/80 p-3 rounded-xl text-xs text-amber-900 flex items-center gap-2">
+                <Sparkles size={16} className="shrink-0 text-amber-600" />
+                <span><strong>Önemli:</strong> Görsel üretimi için <strong>Hugging Face (stabilityai/stable-diffusion-2-1)</strong>, Fal.ai veya DALL-E gibi görsel çizen modeller seçilmelidir. Metin modelleri (DeepSeek, Claude, Llama vb.) görsel üretemez.</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
